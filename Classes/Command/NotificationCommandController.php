@@ -61,4 +61,36 @@ class NotificationCommandController extends CommandController
 
         $this->outputLine('Notification sent to %d user(s).', [\count($userList)]);
     }
+
+    /**
+     * Send a notification to a comma-separated list of users.
+     *
+     * Example:
+     *  ./flow notification:sendmessage \
+     *      --app "fucodo.notification" \
+     *      --subject "Info" \
+     *      --message "Hello from CLI" \
+     *      --users "user1,user2"
+     */
+    public function sendMessageToRoleCommand(
+        string $app,
+        string $subject,
+        string $message,
+        string $role,
+        string $objectType = 'cli',
+        string $objectId = '',
+        string $link = '',
+        string $icon = ''
+    ): void {
+        $this->notificationService->sendToUsersWithRole(
+            $role,
+            $app,
+            $subject,
+            $message,
+            $objectType,
+            $objectId !== '' ? $objectId : null,
+            $link !== '' ? $link : null,
+            $icon !== '' ? $icon : null
+        );
+    }
 }
