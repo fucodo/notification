@@ -140,3 +140,51 @@ No special settings are required. You can add controllers/endpoints to expose no
 
 ## License
 This package is released under the terms of the MIT License. See the repository root `LICENSE` if available, or include your own license file for distribution.
+
+## CLI help
+You can inspect available options and arguments via Flow's built-in help:
+
+```
+./flow help notification:sendmessage
+```
+
+This shows all flags accepted by the `notification:sendmessage` command.
+
+## Signals/Events
+A Flow signal `notificationAdded` is emitted whenever a notification is created via the repository. You can react to it in your application, for example to forward the notification to another channel.
+
+Example (pseudo-code):
+
+```php
+// In some package of your distribution
+namespace Your\Package;
+
+use fucodo\Notification\Domain\Model\Notification;
+
+class NotificationListener
+{
+    /**
+     * @param Notification $notification The persisted notification entity
+     */
+    public function onNotificationAdded(Notification $notification): void
+    {
+        // e.g. push to a websocket, send an email, log, etc.
+    }
+}
+```
+
+Wire this listener to the `notificationAdded` signal via AOP configuration, for example in `Configuration/Objects.yaml` or an Aspect, depending on your project's conventions.
+
+## Uninstall / removal
+If you decide to remove the package, drop the database table after uninstalling the package:
+
+```
+DROP TABLE IF EXISTS fucodo_notification_domain_model_notification;
+```
+
+Then clear caches and update the schema as usual:
+
+```
+./flow flow:cache:flush
+./flow doctrine:migrate
+```
