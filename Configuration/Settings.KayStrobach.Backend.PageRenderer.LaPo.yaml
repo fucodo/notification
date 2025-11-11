@@ -1,0 +1,15 @@
+KayStrobach:
+  Backend:
+    PageRenderer:
+      Defaults:
+        jsFiles:
+          # 1200 offcanvas
+          fucodo.notification:
+            file: 'resource://fucodo.notification/Public/WebComponents/fucodo-notifications/dist/index.js'
+            type: module
+            section: head
+            forceOnTop: false
+            async: false
+            integrity: null
+            defer: null
+            crossorigin: null

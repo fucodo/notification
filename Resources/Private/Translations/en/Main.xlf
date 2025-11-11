@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+	<file original="" source-language="en" target-language="en" datatype="plaintext">
+		<body>
+            <trans-unit id="notifications">
+                <source>notifications</source>
+            </trans-unit>
+            <trans-unit id="action.markAsRead">
+                <source>Mark as read</source>
+            </trans-unit>
+            <trans-unit id="action.markAllAsRead">
+                <source>Mark all as read</source>
+            </trans-unit>
+            <trans-unit id="state.noNotifications">
+                <source>No notifications</source>
+            </trans-unit>
+		</body>
+	</file>
+</xliff>

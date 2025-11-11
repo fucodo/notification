@@ -1,0 +1,19 @@
+<html
+    xmlns:b="http://typo3.org/ns/KayStrobach/Backend/ViewHelpers"
+    xmlns:i="http://typo3.org/ns/KayStrobach/IconRegistry/ViewHelpers"
+    data-namespace-typo3-fluid="true"
+>
+
+<fucodo-notifications
+    data-endpoint="{f:uri.action(package:'fucodo.notification', controller:'JsonRpc', action: 'index')}"
+    data-poll-interval="30000"
+    style="height: 100%; display: block; height: 52px;"
+    mark-as-read-label="{f:translate(package: 'fucodo.notification', id:'action.markAsRead')}"
+    mark-all-as-read-label="{f:translate(package: 'fucodo.notification', id:'action.markAllAsRead')}"
+    title-label="{f:translate(package: 'fucodo.notification', id:'notifications')}"
+    no-notifications-label="{f:translate(package: 'fucodo.notification', id:'state.noNotifications')}"
+>
+    <span slot="icon">
+        <i:icon name="bootstrap-bell" />
+    </span>
+</fucodo-notifications>
