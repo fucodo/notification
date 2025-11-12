@@ -41,13 +41,13 @@ class NotificationService
         array $messageParameters = [],
         array $actions = []
     ): void {
-        $timestamp = time();
-
         foreach ($users as $user) {
-            if ($user instanceof Account) {
-                $this->sendToUsers($user, $app, $subject, $message, $objectType, $objectId, $link, $icon, $subjectParameters, $messageParameters, $actions);
+            if (is_string($user)) {
+                $user = $this->accountRepository->findActiveByAccountIdentifierAndAuthenticationProviderName(trim($user), 'DefaultProvider');
             }
-            // Signal emission happens inside the repository.
+            if ($user instanceof Account) {
+                $this->sendToUser($user, $app, $subject, $message, $objectType, $objectId, $link, $icon, $subjectParameters, $messageParameters, $actions);
+            }
         }
     }
 
@@ -112,6 +112,7 @@ class NotificationService
                 'role' => '%' . $role . '%'
             ]
         )->fetchAllAssociative();
+
         foreach ($users as $user) {
             $this->sendToUsers(
                 [$user['accountidentifier']],
