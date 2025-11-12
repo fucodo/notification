@@ -3,13 +3,14 @@ declare(strict_types=1);
 
 namespace fucodo\Notification\Command;
 
+use fucodo\Notification\Domain\Repository\NotificationRepository;
 use fucodo\Notification\Service\NotificationService;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
 use Neos\Flow\Security\AccountRepository;
 
 #[Flow\Scope('singleton')]
-class NotificationCommandController extends CommandController
+class NotifyCommandController extends CommandController
 {
     /**
      * @Flow\Inject
@@ -24,16 +25,22 @@ class NotificationCommandController extends CommandController
     protected AccountRepository $accountRepository;
 
     /**
+     * @Flow\Inject
+     * @var NotificationRepository
+     */
+    protected $notificationRepository;
+
+    /**
      * Send a notification to a comma-separated list of users.
      *
      * Example:
-     *  ./flow notification:sendmessage \
+     *  ./flow notification:se \
      *      --app "fucodo.notification" \
      *      --subject "Info" \
      *      --message "Hello from CLI" \
      *      --users "user1,user2"
      */
-    public function sendMessageCommand(
+    public function accountCommand(
         string $app,
         string $subject,
         string $message,
@@ -89,7 +96,7 @@ class NotificationCommandController extends CommandController
      *      --message "Hello from CLI" \
      *      --users "user1,user2"
      */
-    public function sendMessageToRoleCommand(
+    public function roleCommand(
         string $app,
         string $subject,
         string $message,
@@ -109,5 +116,11 @@ class NotificationCommandController extends CommandController
             $link !== '' ? $link : null,
             $icon !== '' ? $icon : null
         );
+    }
+
+    public function revokeCommand(?string $app = null, ?string $user = null)
+    {
+        $account = $this->accountRepository->findActiveByAccountIdentifierAndAuthenticationProviderName($user, 'DefaultProvider');
+        $this->notificationRepository->revokeMessage($app, $account);
     }
 }

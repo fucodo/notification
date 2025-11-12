@@ -131,4 +131,21 @@ class NotificationRepository extends Repository
     {
         // Handled via AOP; intentionally empty.
     }
+
+    public function revokeMessage(?string $app = null, ?Account $account = null)
+    {
+        if (($account === null) && ($app === null)) {
+            throw  new \InvalidArgumentException('Either account or app must be set');
+        }
+
+        $demands = [];
+        if ($app !== null) {
+            $demands['app'] = $app;
+        }
+        if ($account !== null) {
+            $demands['account'] = $this->persistenceManager->getIdentifierByObject($account);
+        }
+
+        $this->connection->delete(self::TABLE_NAME, $demands);
+    }
 }
