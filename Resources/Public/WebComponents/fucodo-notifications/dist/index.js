@@ -79,7 +79,7 @@ class FucodoNotifications extends HTMLElement {
                 <div data-fucodo-role="list" class="list-group list-group-flush"></div>
                 <div data-fucodo-role="empty"
                      class="text-muted small text-center py-3"
-                     style="display:none;" data-fucodo-role="dropdown-empty">
+                     style="display:none;">
                     ${this.noNotificationLabel}
                 </div>
                 <div data-fucodo-role="error"
@@ -94,7 +94,7 @@ class FucodoNotifications extends HTMLElement {
         this.$count = this.querySelector('[data-fucodo-role="count"]');
         this.$dropdown = this.querySelector('[data-fucodo-role="dropdown"]');
         this.$dropdownTitle = this.querySelector('[data-fucodo-role="dropdown-title"]');
-        this.$dropdownEmpty = this.querySelector('[data-fucodo-role="dropdown-empty"]');
+        this.$dropdownEmpty = this.querySelector('[data-fucodo-role="empty"]');
         this.$list = this.querySelector('[data-fucodo-role="list"]');
         this.$empty = this.querySelector('[data-fucodo-role="empty"]');
         this.$error = this.querySelector('[data-fucodo-role="error"]');
