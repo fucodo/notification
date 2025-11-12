@@ -40,6 +40,7 @@ class FucodoNotifications extends HTMLElement {
 
         // Capture any light-DOM children provided with slot="icon" before we overwrite innerHTML
         const slottedIconNodes = Array.from(this.querySelectorAll('[slot="icon"]'));
+        const slottedNoNotification = Array.from(this.querySelectorAll('[slot="noNotifications"]'));
 
         this.innerHTML = `
             <style>
@@ -67,7 +68,7 @@ class FucodoNotifications extends HTMLElement {
             <div class="dropdown-menu dropdown-menu-start p-0 shadow"
                  data-fucodo-role="dropdown"
                  style="min-width:300px; max-height:360px; overflow-y:auto; display:none;right:0">
-                <div class="d-flex justify-content-between align-items-center border-bottom p-3">
+                <div class="d-flex justify-content-between align-items-center border-bottom p-3" data-fucodo-role="dropdown-title">
                     <span class="fw-semibold">${this.titleLabel}</span>
                     <button type="button"
                             class="ms-3 btn btn-sm"
@@ -92,6 +93,7 @@ class FucodoNotifications extends HTMLElement {
         this.$toggle = this.querySelector('[data-fucodo-role="toggle"]');
         this.$count = this.querySelector('[data-fucodo-role="count"]');
         this.$dropdown = this.querySelector('[data-fucodo-role="dropdown"]');
+        this.$dropdownTitle = this.querySelector('[data-fucodo-role="dropdown-title"]');
         this.$list = this.querySelector('[data-fucodo-role="list"]');
         this.$empty = this.querySelector('[data-fucodo-role="empty"]');
         this.$error = this.querySelector('[data-fucodo-role="error"]');
@@ -103,6 +105,14 @@ class FucodoNotifications extends HTMLElement {
             slottedIconNodes.forEach(node => {
                 try { node.removeAttribute('slot'); } catch (e) {}
                 this.$icon.appendChild(node);
+            });
+        }
+
+        if (this.$dropdown && slottedNoNotification.length) {
+            this.$dropdown.innerHTML = '';
+            slottedNoNotification.forEach(node => {
+                try { node.removeAttribute('slot'); } catch (e) {}
+                this.$dropdown.appendChild(node);
             });
         }
     }
@@ -171,9 +181,11 @@ class FucodoNotifications extends HTMLElement {
     renderList() {
         this.$list.innerHTML = '';
         this.$error.style.display = 'none';
+        this.$dropdownTitle.classList.remove('d-none');
 
         if (!this.notifications.length) {
             this.$empty.style.display = 'block';
+            this.$dropdownTitle.classList.add('d-none');
             this.updateBadge();
             return;
         }
