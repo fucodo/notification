@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace fucodo\Notification\Domain\Repository;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
 use fucodo\Notification\Domain\Model\Notification;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\Doctrine\Repository;
@@ -82,19 +83,16 @@ class NotificationRepository extends Repository
      */
     public function deleteByIdForUser(int $id, Account $account): int
     {
-        return (int)$this->connection->createQueryBuilder()
-            ->delete($this->getTableName())
-            ->where('id = :id')
-            ->andWhere('user = :user')
-            ->setParameter('id', $id)
-            ->setParameter('user', $this->persistenceManager->getIdentifierByObject($account))
-            ->execute();
+        return $this->deleteByIdsForUser([$id], $account);
     }
 
     /**
      * Delete multiple notifications for the given user (used as "mark as read" for many).
      *
      * @param int[] $ids
+     * @param Account $account
+     * @return int
+     * @throws Exception
      */
     public function deleteByIdsForUser(array $ids, Account $account): int
     {
@@ -102,11 +100,13 @@ class NotificationRepository extends Repository
             return 0;
         }
 
+        $user = $this->persistenceManager->getIdentifierByObject($account);
+
         $qb = $this->connection->createQueryBuilder();
         $qb->delete($this->getTableName())
-            ->where('user = :user')
+            ->where('account = :user')
             ->andWhere($qb->expr()->in('id', ':ids'))
-            ->setParameter('user', $this->persistenceManager->getIdentifierByObject($account))
+            ->setParameter('user', $user)
             ->setParameter('ids', $ids, Connection::PARAM_INT_ARRAY);
 
         return (int)$qb->execute();

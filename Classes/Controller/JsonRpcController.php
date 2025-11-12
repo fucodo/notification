@@ -9,7 +9,6 @@ use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ActionController;
 use Neos\Flow\Security\Account;
 use Neos\Flow\Security\Context;
-use Neos\Flow\Security\Context as SecurityContext;
 
 class JsonRpcController extends ActionController
 {
@@ -21,7 +20,7 @@ class JsonRpcController extends ActionController
 
     /**
      * @Flow\Inject
-     * @var SecurityContext
+     * @var Context $securityContext
      */
     protected Context $securityContext;
 
@@ -57,18 +56,18 @@ class JsonRpcController extends ActionController
         }
 
         #try {
-            switch ($method) {
-                case 'notifications.list':
-                    $result = $this->handleList($account, is_array($params) ? $params : []);
-                    return $this->encodeResult($id, $result);
+        switch ($method) {
+            case 'notifications.list':
+                $result = $this->handleList($account, is_array($params) ? $params : []);
+                return $this->encodeResult($id, $result);
 
-                case 'notifications.markRead':
-                    $result = $this->handleMarkRead($account, is_array($params) ? $params : []);
-                    return $this->encodeResult($id, $result);
+            case 'notifications.markRead':
+                $result = $this->handleMarkRead($account, is_array($params) ? $params : []);
+                return $this->encodeResult($id, $result);
 
-                default:
-                    return $this->encodeError($id, -32601, 'Method not found');
-            }
+            default:
+                return $this->encodeError($id, -32601, 'Method not found');
+        }
         #} catch (\Throwable $e) {
         #    // You can log $e via Flow's logger here.
         #    return $this->encodeError($id, -32603, 'Internal error');
@@ -99,7 +98,7 @@ class JsonRpcController extends ActionController
         ];
     }
 
-    private function handleMarkRead(Account$account, array $params): array
+    private function handleMarkRead(Account $account, array $params): array
     {
         if (isset($params['ids']) && is_array($params['ids'])) {
             $ids = array_values(
@@ -127,7 +126,7 @@ class JsonRpcController extends ActionController
                 return ['status' => 'error', 'message' => 'Invalid id'];
             }
 
-            $affected = $this->notificationRepository->deleteByIdForUser($id, $userIdentifier);
+            $affected = $this->notificationRepository->deleteByIdForUser($id, $account);
 
             return [
                 'status' => $affected > 0 ? 'ok' : 'not-found',
