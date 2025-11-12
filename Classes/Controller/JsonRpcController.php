@@ -7,6 +7,7 @@ use fucodo\Notification\Domain\Model\Notification;
 use fucodo\Notification\Domain\Repository\NotificationRepository;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ActionController;
+use Neos\Flow\Security\Account;
 use Neos\Flow\Security\Context;
 use Neos\Flow\Security\Context as SecurityContext;
 
@@ -55,16 +56,14 @@ class JsonRpcController extends ActionController
             return $this->encodeError($id, -32600, 'Not authenticated');
         }
 
-        $userIdentifier = $account->getAccountIdentifier();
-
         #try {
             switch ($method) {
                 case 'notifications.list':
-                    $result = $this->handleList($userIdentifier, is_array($params) ? $params : []);
+                    $result = $this->handleList($account, is_array($params) ? $params : []);
                     return $this->encodeResult($id, $result);
 
                 case 'notifications.markRead':
-                    $result = $this->handleMarkRead($userIdentifier, is_array($params) ? $params : []);
+                    $result = $this->handleMarkRead($account, is_array($params) ? $params : []);
                     return $this->encodeResult($id, $result);
 
                 default:
@@ -76,7 +75,7 @@ class JsonRpcController extends ActionController
         #}
     }
 
-    private function handleList(string $userIdentifier, array $params): array
+    private function handleList(Account $account, array $params): array
     {
         $limit = isset($params['limit']) ? (int)$params['limit'] : 50;
         $offset = isset($params['offset']) ? (int)$params['offset'] : 0;
@@ -84,7 +83,7 @@ class JsonRpcController extends ActionController
         $limit = max(1, min($limit, 200));
         $offset = max(0, $offset);
 
-        $rows = $this->notificationRepository->findByUserIdentifier($userIdentifier, $limit, $offset)->toArray();
+        $rows = $this->notificationRepository->findByUserIdentifier($account, $limit, $offset)->toArray();
 
         $notifications = array_map(
             static function (Notification $row): array {
@@ -100,7 +99,7 @@ class JsonRpcController extends ActionController
         ];
     }
 
-    private function handleMarkRead(string $userIdentifier, array $params): array
+    private function handleMarkRead(Account$account, array $params): array
     {
         if (isset($params['ids']) && is_array($params['ids'])) {
             $ids = array_values(
@@ -114,7 +113,7 @@ class JsonRpcController extends ActionController
                 return ['status' => 'ok', 'affected' => 0];
             }
 
-            $affected = $this->notificationRepository->deleteByIdsForUser($ids, $userIdentifier);
+            $affected = $this->notificationRepository->deleteByIdsForUser($ids, $account);
 
             return [
                 'status' => 'ok',

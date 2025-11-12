@@ -10,6 +10,7 @@ use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\Doctrine\Repository;
 use Neos\Flow\Persistence\QueryInterface;
 use Neos\Flow\Persistence\QueryResultInterface;
+use Neos\Flow\Security\Account;
 
 #[Flow\Scope('singleton')]
 class NotificationRepository extends Repository
@@ -24,7 +25,7 @@ class NotificationRepository extends Repository
     protected Connection $connection;
 
     protected $defaultOrderings = [
-        'timestamp' => QueryInterface::ORDER_DESCENDING,
+        'createdAt' => QueryInterface::ORDER_DESCENDING,
     ];
 
     /**
@@ -35,11 +36,13 @@ class NotificationRepository extends Repository
         return self::TABLE_NAME;
     }
 
-    public function findByUserIdentifier(string $userIdentifier, int $limit, int $offset): QueryResultInterface
+    public function findByUserIdentifier(Account $account, int $limit, int $offset): QueryResultInterface
     {
         $q = $this->createQuery();
         $q->matching($q->logicalAnd(
-            $q->equals('user', $userIdentifier),
+            [
+                $q->equals('account', $account)
+            ]
         ));
         $q->setLimit($limit);
         $q->setOffset($offset);
@@ -61,8 +64,8 @@ class NotificationRepository extends Repository
         }
 
         $this->connection->insert($this->getTableName(), $object->jsonSerialize());
-
         $id = (int)$this->connection->lastInsertId();
+
         if ($id > 0) {
             $reflection = new \ReflectionObject($object);
             $property = $reflection->getProperty('id');
@@ -77,14 +80,14 @@ class NotificationRepository extends Repository
     /**
      * Delete a single notification for the given user (used as "mark as read").
      */
-    public function deleteByIdForUser(int $id, string $userIdentifier): int
+    public function deleteByIdForUser(int $id, Account $account): int
     {
         return (int)$this->connection->createQueryBuilder()
             ->delete($this->getTableName())
             ->where('id = :id')
             ->andWhere('user = :user')
             ->setParameter('id', $id)
-            ->setParameter('user', $userIdentifier)
+            ->setParameter('user', $this->persistenceManager->getIdentifierByObject($account))
             ->execute();
     }
 
@@ -93,7 +96,7 @@ class NotificationRepository extends Repository
      *
      * @param int[] $ids
      */
-    public function deleteByIdsForUser(array $ids, string $userIdentifier): int
+    public function deleteByIdsForUser(array $ids, Account $account): int
     {
         if ($ids === []) {
             return 0;
@@ -103,7 +106,7 @@ class NotificationRepository extends Repository
         $qb->delete($this->getTableName())
             ->where('user = :user')
             ->andWhere($qb->expr()->in('id', ':ids'))
-            ->setParameter('user', $userIdentifier)
+            ->setParameter('user', $this->persistenceManager->getIdentifierByObject($account))
             ->setParameter('ids', $ids, Connection::PARAM_INT_ARRAY);
 
         return (int)$qb->execute();

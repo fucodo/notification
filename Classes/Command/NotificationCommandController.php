@@ -6,6 +6,7 @@ namespace fucodo\Notification\Command;
 use fucodo\Notification\Service\NotificationService;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
+use Neos\Flow\Security\AccountRepository;
 
 #[Flow\Scope('singleton')]
 class NotificationCommandController extends CommandController
@@ -15,6 +16,12 @@ class NotificationCommandController extends CommandController
      * @var NotificationService
      */
     protected NotificationService $notificationService;
+
+    /**
+     * @Flow\Inject
+     * @var AccountRepository
+     */
+    protected AccountRepository $accountRepository;
 
     /**
      * Send a notification to a comma-separated list of users.
@@ -48,18 +55,28 @@ class NotificationCommandController extends CommandController
             $this->quit(1);
         }
 
-        $this->notificationService->sendToUsers(
-            $userList,
-            $app,
-            $subject,
-            $message,
-            $objectType,
-            $objectId !== '' ? $objectId : null,
-            $link !== '' ? $link : null,
-            $icon !== '' ? $icon : null
-        );
+        $send = 0;
+        foreach ($userList as $user) {
+            $account = $this->accountRepository->findActiveByAccountIdentifierAndAuthenticationProviderName($user, 'DefaultProvider');
+            $this->outputLine('Trying to send notification to user "%s".', [$account->getAccountIdentifier()]);
+            if ($account instanceof \Neos\Flow\Security\Account) {
+                $this->notificationService->sendToUser(
+                    $account,
+                    $app,
+                    $subject,
+                    $message,
+                    $objectType,
+                    $objectId !== '' ? $objectId : null,
+                    $link !== '' ? $link : null,
+                    $icon !== '' ? $icon : null
+                );
+                $this->outputLine('Notification sent to user "%s".', [$user]);
+                $send++;
+            }
+        }
 
-        $this->outputLine('Notification sent to %d user(s).', [\count($userList)]);
+
+        $this->outputLine('Notification sent to %d user(s) of %d.', [$send, \count($userList)]);
     }
 
     /**

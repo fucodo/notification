@@ -10,9 +10,18 @@ use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\Http\HttpRequestHandlerInterface;
 use Neos\Flow\Mvc\ActionRequest;
 use Neos\Flow\Mvc\Routing\UriBuilder;
+use Neos\Flow\Persistence\PersistenceManagerInterface;
+use Neos\Flow\Security\Account;
 
 /**
  * @Flow\Entity
+ * @ORM\Table(
+ *     name="fucodo_notification_domain_model_notification",
+ *     indexes={
+ *         @ORM\Index(name="idx_fucodo_notification_account", columns={"account"}),
+ *         @ORM\Index(name="idx_fucodo_notification_expirationDate", columns={"expirationDate"}),
+ *         @ORM\Index(name="idx_fucodo_notification_createdAt", columns={"createdAt"})
+ *     })
  */
 class Notification implements JsonSerializable
 {
@@ -22,6 +31,11 @@ class Notification implements JsonSerializable
      */
     protected $bootstrap;
 
+    /**
+     * @Flow\Inject
+     * @var PersistenceManagerInterface
+     */
+    protected $persistenceManager;
 
     /**
      * @ORM\Id
@@ -32,22 +46,23 @@ class Notification implements JsonSerializable
     protected ?int $id = null;
 
     /**
-     * @ORM\Column(name="app", type="string", length=32)
+     * @ORM\Column(name="app", type="string", length=128)
      * @var string $app
      */
     protected string $app;
 
     /**
-     * @ORM\Column(name="user", type="string", length=64)
-     * @var string $user
+     * @ORM\Column(nullable=false)
+     * @ORM\ManyToOne(targetEntity="Neos\Flow\Security\Account", cascade={"persist", "remove"}, fetch="EAGER")
+     * @ORM\JoinColumn(name="account", referencedColumnName="persistence_object_identifier", onDelete="CASCADE", nullable=false, unique=false, options={"unsigned"=true})})
+     * @var Account
      */
-    protected string $user;
+    protected $account;
 
     /**
-     * @ORM\Column(name="timestamp", type="integer")
-     * @var int $timestamp
+     * @var \DateTimeImmutable $createdAt
      */
-    protected int $timestamp;
+    protected \DateTimeImmutable $createdAt;
 
     /**
      * @ORM\Column(name="object_type", type="string", length=64)
@@ -103,6 +118,19 @@ class Notification implements JsonSerializable
      */
     protected ?string $actions = null;
 
+    /**
+     * @var \DateTimeImmutable
+     */
+    protected \DateTimeImmutable $expirationDate;
+
+    // ─── Getters/Setters ─────────────────────────────────────────────────────────
+
+    public function __construct()
+    {
+        $this->expirationDate = new \DateTimeImmutable('+3 months');
+        $this->createdAt = new \DateTimeImmutable('now');
+    }
+
     // ─── Getters/Setters ─────────────────────────────────────────────────────────
 
     public function getId(): ?int
@@ -117,7 +145,7 @@ class Notification implements JsonSerializable
 
     public function setApp(string $app): void
     {
-        $this->app = $app;
+        $this->app = substr($app, 0, 128);
     }
 
     public function getUser(): string
@@ -130,14 +158,14 @@ class Notification implements JsonSerializable
         $this->user = $user;
     }
 
-    public function getTimestamp(): int
+    public function getCreatedAt(): \DateTimeImmutable
     {
-        return $this->timestamp;
+        return $this->createdAt;
     }
 
-    public function setTimestamp(int $timestamp): void
+    public function setCreatedAt(\DateTimeImmutable $dateTimeImmutable): void
     {
-        $this->timestamp = $timestamp;
+        $this->createdAt = $dateTimeImmutable;
     }
 
     public function getObjectType(): string
@@ -230,6 +258,30 @@ class Notification implements JsonSerializable
         $this->actions = $actions;
     }
 
+    public function getAccount(): Account
+    {
+        return $this->account;
+    }
+
+    public function setAccount(Account $account): Notification
+    {
+        $this->account = $account;
+        return $this;
+    }
+
+    public function getExpirationDate(): ?\DateTimeImmutable
+    {
+        return $this->expirationDate;
+    }
+
+    public function setExpirationDate(?\DateTimeImmutable $expirationDate): Notification
+    {
+        $this->expirationDate = $expirationDate;
+        return $this;
+    }
+
+    // ─── Helper ─────────────────────────────────────────
+
     protected function getUriBuilder($absolute = true): UriBuilder
     {
         $requestHandler = $this->bootstrap->getActiveRequestHandler();
@@ -250,8 +302,8 @@ class Notification implements JsonSerializable
         return [
             'id' => $this->id,
             'app' => $this->app,
-            'user' => $this->user,
-            'timestamp' => $this->timestamp,
+            'account' => $this->persistenceManager->getIdentifierByObject($this->account),
+            'createdAt' => $this->createdAt->format('Y-m-d H:i:s'),
             'object_type' => $this->objectType,
             'object_id' => $this->objectId,
             'subject' => $this->subject,
@@ -260,6 +312,7 @@ class Notification implements JsonSerializable
             'message_parameters' => $this->messageParameters,
             'link' => $this->link,
             'icon' => $this->icon,
+            'expirationDate' => $this->expirationDate->format('Y-m-d H:i:s'),
             'actions' => $this->actions,
         ];
     }
