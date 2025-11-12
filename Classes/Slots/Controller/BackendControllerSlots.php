@@ -15,7 +15,7 @@ class BackendControllerSlots
             (new TopNavigation\EntryWithTemplate(
                 'resource://fucodo.notification/Private/Backend/TopBar/Notification.html',
                 'start',
-                'top-navigation-entry-barcode'
+                'top-navigation-entry-fucodo-notification'
             ))
         );
     }
