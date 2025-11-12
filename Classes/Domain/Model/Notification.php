@@ -89,7 +89,7 @@ class Notification implements JsonSerializable
     protected ?string $subjectParameters = null;
 
     /**
-     * @ORM\Column(name="message", type="string", length=64, nullable=true)
+     * @ORM\Column(name="message", type="string", length=1024, nullable=true)
      * @var string|null $message
      */
     protected ?string $message = null;
