@@ -42,6 +42,19 @@ class FucodoNotifications extends HTMLElement {
         const slottedIconNodes = Array.from(this.querySelectorAll('[slot="icon"]'));
 
         this.innerHTML = `
+            <style>
+              @keyframes horizontal-shaking {
+               0% { transform: translateX(0) }
+               25% { transform: translateX(5px) }
+               50% { transform: translateX(-5px) }
+               75% { transform: translateX(5px) }
+               100% { transform: translateX(0) }
+              }
+              .wooble {
+                animation: horizontal-shaking 0.2s ease-in-out;
+                animation-iteration-count: 10;
+              }
+            </style>
             <button type="button"
                     class="btn btn-link text-decoration-none position-relative"
                     data-fucodo-role="toggle" style="height:100%;">
@@ -138,12 +151,20 @@ class FucodoNotifications extends HTMLElement {
     }
 
     updateBadge() {
-        const count = this.notifications.length;
-        if (count > 0) {
-            this.$count.textContent = count;
+        let previousCount = this.count ?? 0;
+        this.count = this.notifications.length;
+        let badgeContent = this.count > 9 ? '9+' : this.count;
+        if (this.count > 0) {
+            this.$count.textContent = badgeContent;
             this.$count.style.display = 'inline-block';
         } else {
             this.$count.style.display = 'none';
+        }
+
+        if (previousCount !== this.count) {
+            this.$count.classList.add('wooble');
+            const event = new CustomEvent('fucodo-notifications-count-changed', {detail: {count: this.count}});
+            this.dispatchEvent(event);
         }
     }
 
